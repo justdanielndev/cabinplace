@@ -34,10 +34,18 @@ export async function GET() {
       []
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items = response.documents.map((doc: any) => {
+    interface StoreItemDoc {
+      $id: string;
+      name?: string;
+      description?: string;
+      xpPrice?: number;
+      quantity?: number;
+      category?: string;
+      limitPerPerson?: number | null;
+      relatedEvent?: string | null;
+    }
+    const items = response.documents.map((doc: StoreItemDoc) => {
       const quantity = doc.quantity !== undefined ? doc.quantity : -1;
-      const stockStatus = quantity === 0 ? 'Out of stock' : 'In stock';
       
       return {
         id: doc.$id,

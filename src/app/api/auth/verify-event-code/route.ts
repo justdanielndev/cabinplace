@@ -28,8 +28,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sign ups are not configured' }, { status: 403 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signUpsEnabled = (settingsResponse.documents[0] as any).value?.toLowerCase() === 'true';
+    interface Setting {
+      value?: string;
+    }
+    const signUpsEnabled = (settingsResponse.documents[0] as Setting).value?.toLowerCase() === 'true';
     
     if (!signUpsEnabled) {
       return NextResponse.json({ error: 'Sign ups are currently closed. Please contact the event organizers.' }, { status: 403 });
@@ -45,8 +47,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Event code not configured' }, { status: 403 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const storedEventCode = (eventCodeResponse.documents[0] as any).value || '';
+    const storedEventCode = (eventCodeResponse.documents[0] as Setting).value || '';
     
     if (code.toUpperCase() !== storedEventCode.toUpperCase()) {
       return NextResponse.json({ error: 'Invalid event code' }, { status: 401 });
@@ -64,14 +65,12 @@ export async function POST(request: NextRequest) {
       [Query.equal('key', 'maxAge')]
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const minAgeValue = minAgeResponse.documents.length > 0 
-      ? (minAgeResponse.documents[0] as any).value || '0'
+      ? (minAgeResponse.documents[0] as Setting).value || '0'
       : '0';
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const maxAgeValue = maxAgeResponse.documents.length > 0 
-      ? (maxAgeResponse.documents[0] as any).value || '200'
+      ? (maxAgeResponse.documents[0] as Setting).value || '200'
       : '200';
 
     const minAge = parseInt(minAgeValue, 10);
@@ -104,8 +103,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (userResponse.documents[0] as any).$id;
+    interface UserRecord {
+      $id: string;
+    }
+    const userId = (userResponse.documents[0] as UserRecord).$id;
 
     await databases.updateDocument(
       APPWRITE_DATABASE_ID,

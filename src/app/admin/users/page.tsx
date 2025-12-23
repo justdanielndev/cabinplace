@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopNav } from '@/components/top-nav';
-import { ArrowLeft, Ban, Shield, Users as UsersIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface User {
@@ -25,6 +25,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<'all' | 'active' | 'banned' | 'pending'>('all');
+
+  type FilterType = 'all' | 'active' | 'banned' | 'pending';
 
   useEffect(() => {
     const checkAuthAndFetchUsers = async () => {
@@ -124,7 +126,7 @@ export default function AdminUsersPage() {
                 {['all', 'active', 'pending', 'banned'].map((f) => (
                   <button
                     key={f}
-                    onClick={() => setFilter(f as any)}
+                    onClick={() => setFilter(f as FilterType)}
                     className={`px-4 py-2 rounded-lg transition-colors capitalize ${
                       filter === f
                         ? 'bg-[#7d82b8] text-white'

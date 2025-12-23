@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { databases, DB, APPWRITE_DATABASE_ID, Query } from '@/lib/appwrite';
-import { ID } from 'appwrite';
 
 async function findUserBySlackId(slackUserId: string) {
   try {
@@ -12,10 +11,21 @@ async function findUserBySlackId(slackUserId: string) {
     );
     
     if (response.documents.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const member = response.documents[0] as any;
+      interface Member {
+        $id: string;
+        name?: string;
+        email?: string;
+        slackId?: string;
+        slackName?: string;
+        experiencePoints?: number;
+        teamId?: string;
+        banned?: boolean;
+        banReason?: string;
+        purchasedItems?: string | unknown[];
+      }
+      const member = response.documents[0] as Member;
       
-      let purchasedItems: any[] = [];
+      let purchasedItems: unknown[] = [];
       try {
         if (typeof member.purchasedItems === 'string') {
           purchasedItems = JSON.parse(member.purchasedItems);
@@ -104,11 +114,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient XP' }, { status: 400 });
     }
 
-    let purchasedItems = Array.isArray(user.purchasedItems) ? user.purchasedItems : [];
+    const purchasedItems = Array.isArray(user.purchasedItems) ? user.purchasedItems : [];
 
     if (storeItem.limitPerPerson > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const itemPurchases = purchasedItems.filter((item: any) => item.itemId === itemId);
+      interface PurchasedItem {
+        itemId?: string;
+      }
+      const itemPurchases = (purchasedItems as PurchasedItem[]).filter((item: PurchasedItem) => item.itemId === itemId);
       if (itemPurchases.length >= storeItem.limitPerPerson) {
         return NextResponse.json({ error: 'Purchase limit reached for this item' }, { status: 400 });
       }

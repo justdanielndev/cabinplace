@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Vote, Loader2, CheckCircle, Calendar, User, Users, Clock, GitBranch, ChevronDown, ChevronUp } from 'lucide-react'
+import { Vote, Loader2, CheckCircle, Calendar, User, Users, Clock, GitBranch } from 'lucide-react'
 import { TopNav } from '@/components/top-nav'
 import { SettingsGuard } from '@/components/settings-guard'
 import ReactMarkdown from 'react-markdown'
@@ -56,8 +56,8 @@ export default function VotingPage() {
   }
 
   useEffect(() => {
-    fetchProjects()
-  }, [])
+    void fetchProjects()
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

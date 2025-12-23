@@ -49,8 +49,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: false, message: 'User not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const member = members.documents[0] as any;
+    interface Member {
+      name?: string;
+      email?: string;
+      slackName?: string;
+      purchasedItems?: string | unknown[];
+    }
+    const member = members.documents[0] as Member;
     
     const eventsResponse = await databases.listDocuments(
       APPWRITE_DATABASE_ID,
@@ -58,8 +63,15 @@ export async function POST(request: NextRequest) {
       []
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const event = eventsResponse.documents.find((doc: any) => doc.$id === eventId);
+    interface EventDoc {
+      $id: string;
+      storeItemId?: string;
+      name?: string;
+      location?: string;
+      dayOfWeek?: string;
+      hour?: string;
+    }
+    const event = eventsResponse.documents.find((doc: EventDoc) => doc.$id === eventId);
 
     if (!event) {
       return NextResponse.json({ valid: false, message: 'Event not found' }, { status: 404 });
@@ -69,19 +81,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: false, message: 'Event does not require purchase' }, { status: 400 });
     }
 
-    let purchasedItems: any[] = [];
+    interface PurchasedItem {
+      itemId?: string;
+    }
+    let purchasedItems: PurchasedItem[] = [];
     try {
       if (typeof member.purchasedItems === 'string') {
-        purchasedItems = JSON.parse(member.purchasedItems);
+        purchasedItems = JSON.parse(member.purchasedItems) as PurchasedItem[];
       } else if (Array.isArray(member.purchasedItems)) {
-        purchasedItems = member.purchasedItems;
+        purchasedItems = member.purchasedItems as PurchasedItem[];
       }
     } catch {
       purchasedItems = [];
     }
 
     // Check if user has purchased this event's store item
-    const hasPurchased = purchasedItems.some((item: any) => item.itemId === event.storeItemId);
+    const hasPurchased = purchasedItems.some((item: PurchasedItem) => item.itemId === event.storeItemId);
 
     if (!hasPurchased) {
       return NextResponse.json({ 

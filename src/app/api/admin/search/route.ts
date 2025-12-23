@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { databases, DB, APPWRITE_DATABASE_ID, Query } from '@/lib/appwrite';
+import { databases, DB, APPWRITE_DATABASE_ID } from '@/lib/appwrite';
 import { getHackathonSettings } from '@/lib/settings';
 
 async function checkAdminAuth(slackUserId: string) {
@@ -39,8 +39,20 @@ export async function GET(request: NextRequest) {
     );
 
     const searchTerm = query.toLowerCase();
+    interface MemberDoc {
+      name?: string;
+      email?: string;
+      slackName?: string;
+      slackId?: string;
+      $id: string;
+      inviteId?: string;
+      experiencePoints?: number;
+      teamId?: string;
+      pending?: boolean;
+      banned?: boolean;
+    }
     const results = response.documents
-      .filter((doc: any) => {
+      .filter((doc: MemberDoc) => {
         const name = (doc.name || '').toLowerCase();
         const email = (doc.email || '').toLowerCase();
         const slackName = (doc.slackName || '').toLowerCase();
@@ -54,7 +66,7 @@ export async function GET(request: NextRequest) {
         );
       })
       .slice(0, 20)
-      .map((doc: any) => ({
+      .map((doc: MemberDoc) => ({
         id: doc.$id,
         inviteId: doc.inviteId,
         name: doc.name,

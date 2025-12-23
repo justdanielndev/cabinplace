@@ -34,17 +34,32 @@ async function findUserBySlackId(slackUserId: string) {
     );
     
     if (members.documents.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const member = members.documents[0] as any;
+      interface Member {
+        $id: string;
+        name?: string;
+        email?: string;
+        slackId?: string;
+        slackName?: string;
+        experiencePoints?: number;
+        teamId?: string;
+        banned?: boolean;
+        banReason?: string;
+        inviteId?: string;
+        purchasedItems?: string | unknown[];
+      }
+      const member = members.documents[0] as Member;
       const teamId = member.teamId || '';
       const teamName = await getTeamNameById(teamId);
       
-      let purchasedItems: any[] = [];
+      interface PurchasedItem {
+        [key: string]: unknown;
+      }
+      let purchasedItems: PurchasedItem[] = [];
       try {
         if (typeof member.purchasedItems === 'string') {
           purchasedItems = JSON.parse(member.purchasedItems);
         } else if (Array.isArray(member.purchasedItems)) {
-          purchasedItems = member.purchasedItems;
+          purchasedItems = member.purchasedItems as PurchasedItem[];
         }
       } catch {
         purchasedItems = [];

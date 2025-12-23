@@ -22,7 +22,17 @@ async function getSlackUserNickname(slackUserId: string): Promise<string | null>
       return null;
     }
 
-    const data = await response.json() as any;
+    interface SlackUserResponse {
+      ok: boolean;
+      error?: string;
+      user?: {
+        profile?: {
+          display_name?: string;
+        };
+        real_name?: string;
+      };
+    }
+    const data = await response.json() as SlackUserResponse;
     if (!data.ok) {
       console.error('Slack API error:', data.error);
       return null;
@@ -49,7 +59,12 @@ export async function syncUserDataFromAuthProvider(
       return null;
     }
 
-    const userInfo = await userInfoResponse.json() as any;
+    interface UserInfo {
+      nickname?: string;
+      name?: string;
+      email?: string;
+    }
+    const userInfo = await userInfoResponse.json() as UserInfo;
     
     let slackNickname: string | null = null;
     if (slackUserId) {
@@ -70,18 +85,18 @@ export async function syncUserDataFromAuthProvider(
 export async function updateUserInDatabase(
   userId: string,
   freshUserData: AuthUserData,
-  currentUserData: Record<string, any>
+  currentUserData: Record<string, unknown>
 ): Promise<void> {
   const updateFields: Record<string, unknown> = {};
 
-  if (freshUserData.name && freshUserData.name !== currentUserData.name) {
+  if (freshUserData.name && freshUserData.name !== (currentUserData.name as string)) {
     updateFields.name = freshUserData.name;
     updateFields.slackName = freshUserData.name;
   }
-  if (freshUserData.legalName && freshUserData.legalName !== currentUserData.legalName) {
+  if (freshUserData.legalName && freshUserData.legalName !== (currentUserData.legalName as string)) {
     updateFields.legalName = freshUserData.legalName;
   }
-  if (freshUserData.email && freshUserData.email !== currentUserData.email) {
+  if (freshUserData.email && freshUserData.email !== (currentUserData.email as string)) {
     updateFields.email = freshUserData.email;
   }
 

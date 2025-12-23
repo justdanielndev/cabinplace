@@ -90,7 +90,7 @@ export default function StoreAdminPage() {
           name: '',
           description: '',
           xpPrice: '',
-          stockStatus: 'unlimited',
+          quantity: '-1',
           category: '',
           limitPerPerson: '',
           relatedEvent: '',

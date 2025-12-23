@@ -52,20 +52,28 @@ export async function GET() {
       []
     );
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    interface MemberDoc {
+      slackId?: string;
+      name?: string;
+      slackName?: string;
+      experiencePoints?: number;
+      teamId?: string;
+      banned?: boolean;
+    }
     const usersWithTeams = await Promise.all(
-      membersResponse.documents.map(async (member: any) => {
-        const teamId = member.teamId || '';
+      membersResponse.documents.map(async (member) => {
+        const memberData = member as MemberDoc;
+        const teamId = memberData.teamId || '';
         const teamName = await getTeamNameById(teamId);
         
         return {
-          id: member.slackId || '',
-          name: member.name || '',
-          slackName: member.slackName || '',
-          xp: member.experiencePoints || 0,
+          id: memberData.slackId || '',
+          name: memberData.name || '',
+          slackName: memberData.slackName || '',
+          xp: memberData.experiencePoints || 0,
           teamId: teamId,
           teamName: teamName,
-          banned: member.banned || false
+          banned: memberData.banned || false
         };
       })
     );
@@ -84,18 +92,25 @@ export async function GET() {
       []
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    interface TeamDoc {
+      name?: string;
+      members?: unknown;
+    }
     const teamsArray = await Promise.all(
-      teamsResponse.documents.map(async (doc: any) => {
-        let members: any[] = [];
+      teamsResponse.documents.map(async (doc) => {
+        const docData = doc as TeamDoc;
+        interface TeamMember {
+          id: string;
+        }
+        const members: TeamMember[] = [];
         try {
-          members = Array.isArray(doc.members) ? doc.members : JSON.parse(doc.members || '[]');
+          const temp = Array.isArray(docData.members) ? docData.members : JSON.parse((docData.members as string) || '[]');
+          members.push(...(temp as TeamMember[]));
         } catch {
-          members = [];
+          // members already initialized as empty array
         }
         
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const membersWithXP = await Promise.all(members.map(async (member: any) => ({
+        const membersWithXP = await Promise.all(members.map(async (member: TeamMember) => ({
           ...member,
           xp: await getMemberXP(member.id)
         })));
@@ -104,7 +119,7 @@ export async function GET() {
         const memberCount = membersWithXP.length;
 
         return {
-          teamName: doc.name || '',
+          teamName: docData.name || '',
           totalXP: totalXP,
           memberCount: memberCount,
           averageXP: memberCount > 0 ? Math.round(totalXP / memberCount) : 0

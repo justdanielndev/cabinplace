@@ -33,7 +33,19 @@ export async function GET() {
       []
     );
 
-    const users = response.documents.map((doc: any) => ({
+    interface MemberDoc {
+      $id: string;
+      inviteId?: string;
+      name?: string;
+      email?: string;
+      slackName?: string;
+      slackId?: string;
+      experiencePoints?: number;
+      teamId?: string;
+      pending?: boolean;
+      banned?: boolean;
+    }
+    const users = response.documents.map((doc: MemberDoc) => ({
       id: doc.$id,
       inviteId: doc.inviteId,
       name: doc.name,

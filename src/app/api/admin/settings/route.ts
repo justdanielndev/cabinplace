@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { databases, DB, APPWRITE_DATABASE_ID, Query } from '@/lib/appwrite';
+import { databases, DB, APPWRITE_DATABASE_ID } from '@/lib/appwrite';
 import { getHackathonSettings } from '@/lib/settings';
 
 async function checkAdminAuth(slackUserId: string) {
@@ -49,7 +49,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    const body = await request.json() as any;
+    interface SettingsUpdate {
+      startDateAndTime: string;
+      endDateAndTime: string;
+      eventCode: string;
+      signUpsEnabled: boolean;
+      votingEnabled: boolean;
+      projectsEnabled: boolean;
+      teamEnabled: boolean;
+      eventsEnabled: boolean;
+      newsEnabled: boolean;
+      leaderboardEnabled: boolean;
+      storeEnabled: boolean;
+      minAge: number;
+      maxAge: number;
+      friday: string;
+      saturday: string;
+      sunday: string;
+      monday: string;
+      tuesday: string;
+      wednesday: string;
+      thursday: string;
+      dateOrder?: string[];
+    }
+    const body = await request.json() as SettingsUpdate;
 
     const settingsToUpdate = [
       { key: 'startDateAndTime', value: body.startDateAndTime },
@@ -83,7 +106,11 @@ export async function POST(request: NextRequest) {
           []
         );
 
-        const existing = response.documents.find((doc: any) => doc.key === setting.key);
+        interface SettingDoc {
+          $id: string;
+          key?: string;
+        }
+        const existing = response.documents.find((doc: SettingDoc) => (doc as SettingDoc & { key: string }).key === setting.key);
 
         if (existing) {
           await databases.updateDocument(

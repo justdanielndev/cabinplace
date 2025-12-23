@@ -31,8 +31,19 @@ export async function GET() {
       []
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const teams = await Promise.all(response.documents.map(async (doc: any) => {
+    interface TeamDoc {
+      $id: string;
+      teamId?: string;
+      name?: string;
+      teamSize?: number;
+      members?: unknown;
+      projects?: unknown;
+      joinRequests?: unknown;
+      type?: string;
+      $createdAt: string;
+      $updatedAt: string;
+    }
+    const teams = await Promise.all(response.documents.map(async (doc: TeamDoc) => {
       let members: unknown[] = [];
       let projects: string[] = [];
       let joinRequests: unknown[] = [];
@@ -40,7 +51,7 @@ export async function GET() {
       try {
         members = Array.isArray(doc.members) 
           ? doc.members 
-          : JSON.parse(doc.members || '[]');
+          : JSON.parse((doc.members as string) || '[]');
       } catch {
         members = [];
       }
@@ -48,7 +59,7 @@ export async function GET() {
       try {
         projects = Array.isArray(doc.projects) 
           ? doc.projects 
-          : JSON.parse(doc.projects || '[]');
+          : JSON.parse((doc.projects as string) || '[]');
       } catch {
         projects = [];
       }
@@ -56,12 +67,17 @@ export async function GET() {
       try {
         joinRequests = Array.isArray(doc.joinRequests) 
           ? doc.joinRequests 
-          : JSON.parse(doc.joinRequests || '[]');
+          : JSON.parse((doc.joinRequests as string) || '[]');
       } catch {
         joinRequests = [];
       }
 
-      const membersWithXP = await Promise.all(members.map(async (member: any) => ({
+      interface TeamMember {
+        name?: string;
+        slackName?: string;
+        id: string;
+      }
+      const membersWithXP = await Promise.all((members as TeamMember[]).map(async (member: TeamMember) => ({
         ...member,
         name: member.name || member.slackName || '',
         xp: await getMemberXP(member.id)

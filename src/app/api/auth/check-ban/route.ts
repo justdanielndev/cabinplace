@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { databases, DB, APPWRITE_DATABASE_ID, Query } from '@/lib/appwrite';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const slackUserId = cookieStore.get('slack_user_id')?.value;
@@ -18,8 +18,11 @@ export async function GET(request: NextRequest) {
     );
 
     if (response.documents.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const user = response.documents[0] as any;
+      interface User {
+        banned?: boolean;
+        banReason?: string;
+      }
+      const user = response.documents[0] as User;
       const isBanned = user.banned || false;
       const banReason = user.banReason 
         ? `You have been banned from this event for ${user.banReason}`

@@ -4,7 +4,22 @@ import { v4 as uuidv4 } from 'uuid';
 import { databases, DB, APPWRITE_DATABASE_ID, Query } from '@/lib/appwrite';
 import { ID } from 'appwrite';
 
-export async function GET(request: NextRequest) {
+interface ProjectDoc {
+  projectId?: string;
+  name?: string;
+  description?: string;
+  gitRepo?: string;
+  devlogs?: unknown[];
+  hackatimeHours?: number;
+  teamId?: string;
+}
+
+interface TeamDoc {
+  name?: string;
+  members?: unknown;
+}
+
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const slackUserId = cookieStore.get('slack_user_id')?.value;
@@ -19,8 +34,7 @@ export async function GET(request: NextRequest) {
       [Query.equal('status', 'Approved')]
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const projects = await Promise.all(projectsResponse.documents.map(async (doc: any) => {
+    const projects = await Promise.all((projectsResponse.documents as ProjectDoc[]).map(async (doc: ProjectDoc) => {
       const teamId = doc.teamId || '';
       let teamName = 'Unknown Team';
       let teamMembers: string[] = [];
@@ -34,19 +48,23 @@ export async function GET(request: NextRequest) {
           );
           
           if (teamResponse.documents.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const team = teamResponse.documents[0] as any;
+            const team = teamResponse.documents[0] as TeamDoc;
             teamName = team.name || 'Unknown Team';
             
-            let members: any[] = [];
-            try {
-              members = Array.isArray(team.members) 
-                ? team.members 
-                : JSON.parse(team.members || '[]');
-            } catch {
-              members = [];
+            interface TeamMember {
+              name?: string;
+              slackName?: string;
             }
-            teamMembers = members.map((member: any) => member.name || member.slackName || 'Unknown');
+            const members: TeamMember[] = [];
+            try {
+              const temp = Array.isArray(team.members) 
+                ? team.members 
+                : JSON.parse((team.members as string) || '[]');
+              members.push(...(temp as TeamMember[]));
+            } catch {
+              // members already initialized as empty array
+            }
+            teamMembers = members.map((member: TeamMember) => member.name || member.slackName || 'Unknown');
           }
         } catch (error) {
           console.error('Error fetching team data:', error);

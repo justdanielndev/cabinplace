@@ -8,7 +8,7 @@ It also uses Hack Club account as the login system.
 
 ## Pages
 
-- **Home**: Displays the latest news and upcoming events (3 of each) as well as experience and time left until Midnight Cabin ends.
+- **Home**: Displays the latest news and upcoming events (3 of each) as well as experience and time left until event starts/ends.
 - **News**: Shows the latest news.
 - **Events**: Shows the calendar of events.
 - **Store**: Displays the in-event shop where users can buy items with their experience points.

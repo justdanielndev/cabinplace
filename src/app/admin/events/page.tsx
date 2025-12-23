@@ -24,7 +24,12 @@ export default function EventsAdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
-  const [storeItems, setStoreItems] = useState<any[]>([]);
+  interface StoreItem {
+    id: string;
+    name: string;
+    xpPrice: number;
+  }
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({

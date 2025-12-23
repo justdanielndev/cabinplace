@@ -17,10 +17,24 @@ async function fetchHackatimeStats(slackId: string) {
 }
 
 type HackatimeProject = {
-  name: string;
-  hours: number;
-  lastUpdated: string;
+  projectName: string;
+  userId: string;
+  userName?: string;
+  userSlackName?: string;
 };
+
+interface UserRecord {
+  teamId?: string;
+  name?: string;
+  slackName?: string;
+}
+
+interface ProjectDoc {
+  teamId?: string;
+  hackatimeProjects?: unknown;
+  status?: string;
+  $id: string;
+}
 
 async function calculateProjectHours(projectId: string, hackatimeProjects: HackatimeProject[]) {
   if (!hackatimeProjects || hackatimeProjects.length === 0) {
@@ -44,8 +58,10 @@ async function calculateProjectHours(projectId: string, hackatimeProjects: Hacka
         continue;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const projectRecord = projectResponse.documents[0] as any;
+      interface ProjectRecord {
+        teamId: string;
+      }
+      const projectRecord = projectResponse.documents[0] as unknown as ProjectRecord;
       const teamId = projectRecord.teamId;
       const teamsResponse = await databases.listDocuments(
         APPWRITE_DATABASE_ID,
@@ -57,15 +73,21 @@ async function calculateProjectHours(projectId: string, hackatimeProjects: Hacka
         continue;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const teamRecord = teamsResponse.documents[0] as any;
-      let members: any[] = [];
+      interface TeamRecord {
+        members?: unknown;
+      }
+      const teamRecord = teamsResponse.documents[0] as unknown as TeamRecord;
+      interface TeamMember {
+        id: string;
+      }
+      const members: TeamMember[] = [];
       try {
-        members = Array.isArray(teamRecord.members) 
+        const temp = Array.isArray(teamRecord.members) 
           ? teamRecord.members 
-          : JSON.parse(teamRecord.members || '[]');
+          : JSON.parse((teamRecord.members as string) || '[]');
+        members.push(...(temp as TeamMember[]));
       } catch {
-        members = [];
+        // members already initialized as empty array
       }
       
       for (const member of members) {
@@ -122,8 +144,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userRecord = membersResponse.documents[0] as any;
+    const userRecord = membersResponse.documents[0] as UserRecord;
     const userTeamId = userRecord.teamId;
 
     const projectResponse = await databases.listDocuments(
@@ -136,24 +157,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const projectRecord = projectResponse.documents[0] as any;
+    const projectRecord = projectResponse.documents[0] as ProjectDoc;
     
     const projectTeamId = projectRecord.teamId;
     if (userTeamId !== projectTeamId) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    let currentHackatimeProjects: unknown[] = [];
+    const currentHackatimeProjects: unknown[] = [];
     try {
-      currentHackatimeProjects = Array.isArray(projectRecord.hackatimeProjects) 
+      const temp = Array.isArray(projectRecord.hackatimeProjects) 
         ? projectRecord.hackatimeProjects 
-        : JSON.parse(projectRecord.hackatimeProjects || '[]');
+        : JSON.parse((projectRecord.hackatimeProjects as string) || '[]');
+      currentHackatimeProjects.push(...temp);
     } catch {
-      currentHackatimeProjects = [];
+      // currentHackatimeProjects already initialized as empty array
     }
 
-    const existingProject = currentHackatimeProjects.find((p: any) =>
+    const existingProject = (currentHackatimeProjects as HackatimeProject[]).find((p: HackatimeProject) =>
       p.projectName === projectName.trim() && p.userId === slackUserId
     );
 
@@ -168,7 +189,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       userSlackName: userRecord.slackName || 'Unknown User'
     };
 
-    const updatedHackatimeProjects = [...currentHackatimeProjects, newProject];
+    const updatedHackatimeProjects = [...(currentHackatimeProjects as HackatimeProject[]), newProject] as HackatimeProject[];
     const updatedHours = await calculateProjectHours(id, updatedHackatimeProjects);
     const currentStatus = projectRecord.status || 'Created';
 
@@ -225,8 +246,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userRecord = membersResponse.documents[0] as any;
+    const userRecord = membersResponse.documents[0] as UserRecord;
     const userTeamId = userRecord.teamId;
 
     const projectResponse = await databases.listDocuments(
@@ -239,24 +259,24 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const projectRecord = projectResponse.documents[0] as any;
+    const projectRecord3 = projectResponse.documents[0] as unknown as ProjectDoc;
     
-    const projectTeamId = projectRecord.teamId;
+    const projectTeamId = projectRecord3.teamId;
     if (userTeamId !== projectTeamId) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    let currentHackatimeProjects: unknown[] = [];
+    const currentHackatimeProjects: unknown[] = [];
     try {
-      currentHackatimeProjects = Array.isArray(projectRecord.hackatimeProjects) 
-        ? projectRecord.hackatimeProjects 
-        : JSON.parse(projectRecord.hackatimeProjects || '[]');
+      const temp = Array.isArray(projectRecord3.hackatimeProjects) 
+        ? projectRecord3.hackatimeProjects 
+        : JSON.parse((projectRecord3.hackatimeProjects as string) || '[]');
+      currentHackatimeProjects.push(...temp);
     } catch {
-      currentHackatimeProjects = [];
+      // currentHackatimeProjects already initialized as empty array
     }
 
-    const updatedHackatimeProjects = currentHackatimeProjects.filter((p: { projectName: string; userId: string }) => {
+    const updatedHackatimeProjects = (currentHackatimeProjects as HackatimeProject[]).filter((p: HackatimeProject) => {
       if (typeof p === 'string') {
         return p !== projectName.trim();
       }
@@ -269,7 +289,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     await databases.updateDocument(
       APPWRITE_DATABASE_ID,
       DB.PROJECTS,
-      projectRecord.$id,
+      projectRecord3.$id,
       {
         hackatimeProjects: updatedHackatimeProjects,
         hackatimeHours: updatedHours

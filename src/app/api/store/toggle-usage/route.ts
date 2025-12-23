@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    let purchasedItems = Array.isArray(user.purchasedItems) ? user.purchasedItems : [];
+    const purchasedItems = Array.isArray(user.purchasedItems) ? user.purchasedItems : [];
 
     if (purchaseIndex < 0 || purchaseIndex >= purchasedItems.length) {
       return NextResponse.json({ error: 'Invalid purchase index' }, { status: 400 });

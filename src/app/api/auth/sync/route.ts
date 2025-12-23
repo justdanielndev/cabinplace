@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { databases, DB, APPWRITE_DATABASE_ID, Query } from '@/lib/appwrite';
 import { syncUserDataFromAuthProvider, updateUserInDatabase } from '@/lib/auth-sync';
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const slackUserId = cookieStore.get('slack_user_id')?.value;
@@ -35,8 +35,21 @@ export async function POST(request: Request) {
       return response;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = memberResponse.documents[0] as any;
+    interface User {
+      $id: string;
+      banned?: boolean;
+      banReason?: string;
+      name?: string;
+      legalName?: string;
+      email?: string;
+      slackId?: string;
+      slackName?: string;
+      experiencePoints?: number;
+      teamId?: string;
+      pending?: boolean;
+      inviteId?: string;
+    }
+    const user = memberResponse.documents[0] as User;
 
     if (user.banned) {
       const response = NextResponse.json(
@@ -49,7 +62,7 @@ export async function POST(request: Request) {
 
     if (freshUserData) {
       try {
-        await updateUserInDatabase(user.$id, freshUserData, user);
+        await updateUserInDatabase(user.$id, freshUserData, user as unknown as Record<string, unknown>);
         Object.assign(user, {
           name: freshUserData.name || user.name,
           legalName: freshUserData.legalName || user.legalName,
