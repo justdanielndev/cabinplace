@@ -17,6 +17,9 @@ export default async function Home({
   
   const params = await searchParams;
   const error = params.error;
+
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Cabinplace';
+  const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL || '/mcab.svg';
   
   const getErrorMessage = (errorCode: string) => {
     switch (errorCode) {
@@ -48,13 +51,13 @@ export default async function Home({
             <div className="flex items-center justify-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl border border-zinc-700/50 mr-4">
                 <img
-                  src="/mcab.svg"
-                  alt="Midnight Cabin Logo"
+                  src={logoUrl}
+                  alt={`${appName} Logo`}
                   className="w-12 h-12 p-1.5"
                 />
               </div>
               <h1 className="text-3xl font-bold text-white cursor-default">
-                Midnight Cabin
+                {appName}
               </h1>
             </div>
           </div>

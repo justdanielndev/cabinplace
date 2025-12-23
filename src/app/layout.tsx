@@ -16,8 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Midnight Cabin",
-  description: "Midnight Cabin hackathon panel",
+  title: process.env.NEXT_PUBLIC_APP_NAME || "Cabinplace",
+  description: "Hackathon dashboard for attendees and staff",
+  icons: {
+    icon: process.env.NEXT_PUBLIC_FAVICON_PATH || "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
