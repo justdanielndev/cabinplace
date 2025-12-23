@@ -21,9 +21,14 @@ interface EventItem {
   storeItemId: string | null;
 }
 
+interface User {
+  id: string;
+}
+
 export default function EventDetailPage() {
   const params = useParams();
   const [event, setEvent] = useState<EventItem | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +60,7 @@ export default function EventDetailPage() {
         if (userRes.ok) {
           const userData = await userRes.json();
           if (userData.authenticated && userData.user) {
+            setUser({ id: userData.user.id });
             setPurchasedItems(userData.user.purchasedItems || []);
           }
         }
@@ -80,6 +86,12 @@ export default function EventDetailPage() {
     if (!event.storeItemId) return false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return purchasedItems.some((item: any) => item.itemId === event.storeItemId);
+  };
+
+  const generateTicketQRCode = (eventId: string, userId: string) => {
+    const ticketData = `${userId}-${eventId}`;
+    const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/admin/events/verify-ticket/${ticketData}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`;
   };
 
   const addToCalendar = (event: EventItem) => {
@@ -243,13 +255,29 @@ export default function EventDetailPage() {
                 </div>
               </div>
               
-              <div>
-                <h2 className="text-lg font-semibold text-white mb-4 cursor-default">Description</h2>
-                <div className="p-4 bg-zinc-800/30 rounded-xl">
-                  <p className="text-zinc-300 leading-relaxed cursor-default">
-                    {event.description || 'No description available for this event.'}
-                  </p>
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-white mb-4 cursor-default">Description</h2>
+                  <div className="p-4 bg-zinc-800/30 rounded-xl">
+                    <p className="text-zinc-300 leading-relaxed cursor-default">
+                      {event.description || 'No description available for this event.'}
+                    </p>
+                  </div>
                 </div>
+
+                {event.isStoreUnlockable && hasAccessToEvent(event) && user && (
+                  <div className="text-center">
+                    <h2 className="text-lg font-semibold text-white mb-4 cursor-default">Your Ticket</h2>
+                    <div className="inline-block p-4 bg-white rounded-2xl">
+                      <img 
+                        src={generateTicketQRCode(event.id, user.id)} 
+                        alt="Event Ticket QR Code" 
+                        className="w-40 h-40"
+                      />
+                    </div>
+                    <p className="text-zinc-400 text-sm mt-3 cursor-default">Show this QR code at the venue</p>
+                  </div>
+                )}
               </div>
             </div>
             
