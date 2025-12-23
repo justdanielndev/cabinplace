@@ -1,6 +1,6 @@
 # Cabinplace
 
-This repo contains the code for the Cabinplace panel, which will be used by attendees and staff on hackathons. It includes a news feed, events calendar, user info, leaderboard, in-event shop, and more coming soon!
+This repo contains the code for Cabinplace (hackathon dash), which can be used by attendees and staff on hackathons. It includes a news feed, events calendar, user info, leaderboard, in-event shop, and more coming soon!
 
 It works via an Appwrite database, so we can easily update the content during the event.
 
@@ -14,16 +14,19 @@ It also uses Hack Club account as the login system.
 - **Store**: Displays the in-event shop where users can buy items with their experience points.
 - **Profile**: Displays user info, including their experience points, invite QR, and team.
 - **Leaderboard**: Shows the top users and teams by experience points.
+- **Team**: Displays team info and members.
+- **Projects**: Displays team's projects.
+- **Admin Dashboard**: For event staff to manage news, events, store items...
 
 ## Installing, setting up, and running
 
-Coming soon! For now, you can view the live version at [panel.midnightcabin.tech](https://panel.midnightcabin.tech).
+Coming soon! For now, you can view the live version at [dash.midnightcabin.tech](https://dash.midnightcabin.tech).
 
 ## Customization
 
 ### Branding
 You can customize the branding by setting these environment variables in your `.env` file:
-- `NEXT_PUBLIC_APP_NAME`: The name of your event (default: "Midnight Cabin")
+- `NEXT_PUBLIC_APP_NAME`: The name of your event (default: "Event Name")
 - `NEXT_PUBLIC_LOGO_URL`: Path to your logo file (default: "/mcab.svg")
 - `NEXT_PUBLIC_FAVICON_PATH`: Path to your favicon (default: "/favicon.ico")
 
